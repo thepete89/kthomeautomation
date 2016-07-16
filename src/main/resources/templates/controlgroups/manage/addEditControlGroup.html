@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head th:replace="fragments :: common_header(~{::title},~{})">
+  	<title>KT Home Automation App - Control Groups</title>
+  </head>
+  <body>
+    <nav th:replace="fragments :: common_navigation(${navigationElements})">
+    </nav>
+    <div class="container-fluid">
+      <div class="row"><!-- space --> &nbsp;</div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h1 class="display-4">Control Groups - Modify Control Group</h1>
+        </div>
+      </div>
+      <div class="row">
+      	<div class="col-lg-12">
+			<form action="#" th:action="@{/controlgroups/manage/modify}" th:object="${controlGroupView}" method="post">
+				<div class="card card-block">
+	  				<h4 class="card-title">Basic Control Group Settings</h4>
+	  				<p class="card-text">General and basic settings for every control group.</p>
+					<fieldset class="form-group">
+						<label for="controlGroupName">Control Group Name</label>
+						<input type="text" th:field="*{controlGroupName}" />
+						<input type="hidden" th:field="*{controlGroupId}" />
+					</fieldset>
+				</div>
+				<div class="card card-block">
+	  				<h4 class="card-title">Control Group Sensors</h4>
+	  				<p class="card-text">Here you assign sensor inputs to your control group.</p>
+	  				<div th:if="${#lists.isEmpty(availableSensors)}" class="alert alert-danger">
+	  					It seems as if there are no more unassigned sensors available. Please go to <a href="#" th:href="@{/controlgroups/sensors}">Sensoric Modules</a> to see if there are any unregistered sensors and register them.
+	  				</div>
+	  				<fieldset th:if="${not #lists.isEmpty(availableSensors)}">
+	  					<select th:field="*{selectedSensor}">
+	  						<option th:each="sensor : ${availableSensors}" th:value="${sensor.id}" th:text="${sensor.sensorName}">Sensor 1</option>
+	  					</select>
+	  					<button type="submit" name="addSensor" class="btn btn-primary">Add Sensor</button>
+	  				</fieldset>
+	  				<div th:if="${not #lists.isEmpty(controlGroupView.addedSensors)}" th:remove="tag">
+	  					<ul>
+	  						<div th:each="sensor, sensorStat : *{addedSensors}" th:remove="tag">
+		  						<li>[[${sensor.sensorName}]] <button type="submit" name="removeSensor" th:value="*{addedSensors[__${sensorStat.index}__].id}" class="btn btn-sm btn-primary">Remove</button></li>
+		  						<input type="hidden" th:value="*{addedSensors[__${sensorStat.index}__].sensorName}" th:field="*{addedSensors[__${sensorStat.index}__].sensorName}" />
+		  						<input type="hidden" th:value="*{addedSensors[__${sensorStat.index}__].id}" th:field="*{addedSensors[__${sensorStat.index}__].id}" />
+	  						</div>
+	  					</ul>
+	  				</div>
+				</div>
+				<div class="card card-block">
+	  				<h4 class="card-title">Control Group Actions</h4>
+	  				<p class="card-text">Here you connect actions and action executors to the control group.</p>
+	  				<div th:if="${#lists.isEmpty(availableActionEvaluations)}" class="alert alert-danger">
+	  					It seems as if there are no more unassigned action evaluations available. Please go to <a href="#" th:href="@{/controlgroups/actions}">Control Actions</a> and create new action evaluations.
+	  				</div>
+	  				<fieldset th:if="${not #lists.isEmpty(availableActionEvaluations)}">
+	  					<select th:field="*{selectedActionEvaluation}">
+	  						<option th:each="actionEvaluation : ${availableActionEvaluations}" th:value="${actionEvaluation.id}" th:text="${actionEvaluation.actionEvaluationName}">Action Evaluation 1</option>
+	  					</select>
+	  					<button type="submit" name="addAction" class="btn btn-primary">Add Action</button>
+	  				</fieldset>
+	  				<div th:if="${not #lists.isEmpty(controlGroupView.addedActionEvaluations)}" th:remove="tag">
+  						<div th:each="action, actionStat : *{addedActionEvaluations}" class="card card-block">
+	  						<h4 class="card-title" th:text="${action.actionEvaluationName}">Action 1</h4>
+	  						<p class="card-text">Evaluation script:</p>
+	  						<textarea rows="5" cols="30" th:value="*{addedActionEvaluations[__${actionStat.index}__].evaluationScript}" th:field="*{addedActionEvaluations[__${actionStat.index}__].evaluationScript}" >script</textarea>
+	  						<input type="hidden" th:value="*{addedActionEvaluations[__${actionStat.index}__].id}" th:field="*{addedActionEvaluations[__${actionStat.index}__].id}" />
+	  						<input type="hidden" th:value="*{addedActionEvaluations[__${actionStat.index}__].actionEvaluationName}" th:field="*{addedActionEvaluations[__${actionStat.index}__].actionEvaluationName}" />
+	  						<br>
+  							<button type="submit" name="removeAction" th:value="*{addedActionEvaluations[__${actionStat.index}__].id}" class="btn btn-primary">Remove</button>
+  						</div>
+	  				</div>	  				
+				</div>
+				<button type="submit" name="save" class="btn btn-primary">Save</button>
+			</form>
+      	</div>
+      </div>
+    </div>
+  </body>
+</html>

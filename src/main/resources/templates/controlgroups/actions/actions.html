@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head th:replace="fragments :: common_header(~{::title},~{})">
+  	<title>KT Home Automation App - Control Groups</title>
+  </head>
+  <body>
+    <nav th:replace="fragments :: common_navigation(${navigationElements})">
+    </nav>
+    <div class="container-fluid">
+      <div class="row"><!-- space --> &nbsp;</div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h1 class="display-4">Control Groups - Actions</h1>
+        </div>
+      </div>
+      <div class="row">
+      	<div class="col-lg-12">
+      		<table class="table table-striped table-bordered">
+      			<thead class="thead-default">
+      				<tr>
+      					<th>Name</th>
+      					<th>Executor Type</th>
+      					<th>Linked?</th>
+      					<th>&nbsp;</th>
+      					<th><a href="#" th:href="@{/controlgroups/actions/add}" class="btn btn-sm btn-success-outline pull-xs-right">Add Action</a></th>
+      				</tr>
+      			</thead>
+      			<tbody>
+      				<tr th:each="actionEvaluation : ${actionEvaluations}">
+      					<td th:text="${actionEvaluation.actionEvaluationName}">Dummy Action 1</td>
+      					<td th:text="${#strings.substringAfter(actionEvaluation.actionExecutor.class.name, 'de.kawumtech.app.controlgroups.model.action.executor.')}">RESTExecutor</td>
+      					<td th:text="${actionEvaluation.linked} ? 'Yes' : 'No'">Yes</td>
+      					<td colspan="2">
+      						<a href="#" th:href="@{/controlgroups/actions/edit(id=${actionEvaluation.id})}" class="btn btn-sm btn-primary">Edit</a>
+      						<a href="#" th:if="${not actionEvaluation.linked}" th:href="@{/controlgroups/actions/delete(id=${actionEvaluation.id})}" class="btn btn-sm btn-danger">Delete</a>
+      						<button th:if="${actionEvaluation.linked}" class="btn btn-sm btn-danger" disabled>Delete</button>
+      					</td>
+      				</tr>
+      			</tbody>
+      		</table>
+      	</div>
+      </div>
+
+    </div>
+  </body>
+</html>

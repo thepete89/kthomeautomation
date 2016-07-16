@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: kthomeautomation
+  data:
+    mongodb:
+      host: localhost
+      database: kthomeautomation
+  thymeleaf:
+    cache: false
+    mode: HTML
+    prefix: classpath:/templates/
