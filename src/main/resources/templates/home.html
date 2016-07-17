@@ -35,11 +35,21 @@
 	    	var options = {
 	    		responsive: false,
 	    		scales: {
+	                xAxes: [{
+	                    type: 'time',
+	                    time: {
+	                    	unit: 'second',
+	                    	unitStepSize: 10,
+	                    	displayFormats: {
+	                    		second: 'HH:mm:ss'
+	                    	}
+	                    }
+	                }],	    			
 	    	    	yAxes: [{
 	    	        	ticks: {
-	    	            	max: 40,
+	    	            	max: 50,
 	    	                min: 0,
-	    	                stepSize: 1
+	    	                stepSize: 5
 	    	            }
 	    	       }]
 	    	    },
@@ -69,14 +79,43 @@
     	    	data: data
     	    });
 	    	
+    	    function removeFirst () {
+    	    	if (tempLogger.data.datasets[0].data.length === 20) {
+    	    		var cleanedData = [];
+    	    		var cleanedLabels = [];
+    	    		for(i = 1; i < tempLogger.data.datasets[0].data.length; i++) {
+    	    			cleanedData.push(tempLogger.data.datasets[0].data[i]);
+    	    			cleanedLabels.push(tempLogger.data.labels[i]);
+    	    		}
+            		tempLogger.data.datasets[0].data = cleanedData;
+            		tempLogger.data.labels = cleanedLabels;
+    	    	}
+    	    }
+    	   	
+    	    function updateScaleOptions () {
+            	var lastElement = tempLogger.data.datasets[0].data.length - 1;
+            	tempLogger.options.scales.xAxes[0].time.min = tempLogger.data.labels[0];
+            	tempLogger.options.scales.xAxes[0].time.max = tempLogger.data.labels[lastElement];
+            	if (tempLogger.data.datasets[0].data.length > 1) {
+            		var recalculatedStepSize = (tempLogger.data.labels[1] - tempLogger.data.labels[0]) / 1000;
+            		tempLogger.options.scales.xAxes[0].time.unitStepSize = Math.round(recalculatedStepSize, 10);
+            	}
+    	    }
+    	    
+    	    function updateLogger (sensorValue) {
+				removeFirst();
+            	tempLogger.data.datasets[0].data.push(sensorValue.value);
+            	tempLogger.data.labels.push(sensorValue.timestamp);
+				updateScaleOptions();
+            	tempLogger.update();
+    	    }
+    	    
+    	    
 	    	function dataReceived (data) {
             	console.log('Received: ' + data);
             	var sensorValue = JSON.parse(data.body);
-            	dataCaptureDate = new Date(sensorValue.timestamp);
-            	// tempLogger.addData([sensorValue.value], dataCaptureDate.getHours() + ":" + dataCaptureDate.getMinutes() + ":" + dataCaptureDate.getSeconds());
-            	tempLogger.data.datasets[0].data.push(sensorValue.value);
-            	tempLogger.data.labels.push(dataCaptureDate.getHours() + ":" + dataCaptureDate.getMinutes() + ":" + dataCaptureDate.getSeconds());
-            	tempLogger.update();
+            	// dataCaptureDate = new Date(sensorValue.timestamp);
+            	updateLogger(sensorValue)
 	    	}
 	    		    	
 	    	$(document).ready(function(){
