@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<head th:fragment="common_header(title,links)">
+<html lang="en">
+  <head>
    	<!-- Required meta tags always come first -->
    	<meta charset="utf-8">
    	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -9,14 +10,12 @@
    	<link rel="stylesheet" href="/static/css/bootstrap.css" th:href="@{/css/bootstrap.min.css}">
    	<!-- JavaScript base - jQuery first, then Bootstrap JS. -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="/static/js/tether.min.js" th:src="@{/js/tether.min.js}"></script>
     <script src="/static/js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
-   	<!-- Additional links -->
-   	<th:block th:replace="${links}" />
-   	<!-- Page Title -->
-   	<title th:replace="${title}">KT Home Automation System</title>
-</head>
-<body>
-	<nav th:fragment="common_navigation(navigationElements)" class="navbar navbar-full navbar-dark bg-inverse">
+  	<title>KT Home Automation App</title>
+  </head>
+  <body>
+	<nav class="navbar navbar-full navbar-dark bg-inverse">
       <a class="navbar-brand" href="/">KT HomeAutomation System</a>
       <ul class="nav navbar-nav">
       	<div th:remove="tag" th:each="navigationElement : ${navigationElements}">
@@ -37,4 +36,13 @@
       	</div>
       </ul>
     </nav>
-</body>
+    <div class="container-fluid" layout:fragment="content">
+      <div class="row"><!-- space --> &nbsp;</div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h1 class="display-4">Content</h1>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
