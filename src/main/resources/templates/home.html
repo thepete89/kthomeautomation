@@ -1,129 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head th:replace="fragments :: common_header(~{::title},~{})">
+<html lang="en" layout:decorate="~{layout}">
+  <head>
   	<title>KT Home Automation App - Home</title>
+	<script src="/static/js/Chart.bundle.min.js" th:src="@{/js/Chart.bundle.min.js}"></script>
+	<script src="/static/js/sockjs.min.js" th:src="@{/js/sockjs.min.js}"></script>
+	<script src="/static/js/stomp.min.js" th:src="@{/js/stomp.min.js}"></script>
   </head>
   <body>
-    <nav th:replace="fragments :: common_navigation(${navigationElements})">
-    </nav>
-    <div class="container-fluid">
+    <div class="container-fluid" layout:fragment="content">
       <div class="row"><!-- space --> &nbsp;</div>
       <div class="row">
         <div class="col-lg-12">
           <h1 class="display-4">Home</h1>
-          <!-- 
-          <canvas id="tempLogger" width="980" height="640"></canvas>
-           -->
+          <canvas id="tempLogger" width="1200" height="700"></canvas>
         </div>
       </div>
-    </div>
-    <!--  
-    <script src="/static/js/Chart.min.js" th:src="@{/static/js/Chart.min.js}"></script>
-    <script src="/static/js/stomp.min.js" th:src="@{/static/js/stomp.min.js}"></script>
-    <script src="/static/js/sockjs.min.js" th:src="@{/static/js/sockjs.min.js}"></script>
-    <script type="text/javascript">
-    	// test data
-		var data = {
-		    labels: [],
-		    datasets: [
-		        {
-		            label: "Sensor 0",
-		            fillColor: "rgba(220,220,220,0.2)",
-		            strokeColor: "rgba(220,220,220,1)",
-		            pointColor: "rgba(220,220,220,1)",
-		            pointStrokeColor: "#fff",
-		            pointHighlightFill: "#fff",
-		            pointHighlightStroke: "rgba(220,220,220,1)",
-		            data: []
-		        },
-		        {
-		            label: "Sensor 1",
-		            fillColor: "rgba(151,187,205,0.2)",
-		            strokeColor: "rgba(151,187,205,1)",
-		            pointColor: "rgba(151,187,205,1)",
-		            pointStrokeColor: "#fff",
-		            pointHighlightFill: "#fff",
-		            pointHighlightStroke: "rgba(151,187,205,1)",
-		            data: []
-		        }
-		    ]
-		};
-    	var options = {
-
-   		    ///Boolean - Whether grid lines are shown across the chart
-   		    scaleShowGridLines : true,
-
-   		    //String - Colour of the grid lines
-   		    scaleGridLineColor : "rgba(0,0,0,.05)",
-
-   		    //Number - Width of the grid lines
-   		    scaleGridLineWidth : 1,
-
-   		    //Boolean - Whether to show horizontal lines (except X axis)
-   		    scaleShowHorizontalLines: true,
-
-   		    //Boolean - Whether to show vertical lines (except Y axis)
-   		    scaleShowVerticalLines: true,
-
-   		    //Boolean - Whether the line is curved between points
-   		    bezierCurve : true,
-
-   		    //Number - Tension of the bezier curve between points
-   		    bezierCurveTension : 0.4,
-
-   		    //Boolean - Whether to show a dot for each point
-   		    pointDot : true,
-
-   		    //Number - Radius of each point dot in pixels
-   		    pointDotRadius : 4,
-
-   		    //Number - Pixel width of point dot stroke
-   		    pointDotStrokeWidth : 1,
-
-   		    //Number - amount extra to add to the radius to cater for hit detection outside the drawn point
-   		    pointHitDetectionRadius : 20,
-
-   		    //Boolean - Whether to show a stroke for datasets
-   		    datasetStroke : true,
-
-   		    //Number - Pixel width of dataset stroke
-   		    datasetStrokeWidth : 2,
-
-   		    //Boolean - Whether to fill the dataset with a colour
-   		    datasetFill : true,
-
-   		    //String - A legend template
-   		    legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li><span style=\"background-color:<%=datasets[i].strokeColor%>\"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>"
-
-    	};
-    	    	
-    	$(document).ready(function(){
-    	 	// Get context with jQuery - using jQuery's .get() method.
-    	    var ctx = $("#tempLogger").get(0).getContext("2d");
+	    <script type="text/javascript">
+	    	// test data
+			var data = {
+			    labels: [],
+			    datasets: [
+			        {
+			            label: "Test Sensor 1",
+			            fillColor: "rgba(220,220,220,0.2)",
+			            strokeColor: "rgba(220,220,220,1)",
+			            pointColor: "rgba(220,220,220,1)",
+			            pointStrokeColor: "#fff",
+			            pointHighlightFill: "#fff",
+			            pointHighlightStroke: "rgba(220,220,220,1)",
+			            data: []
+			        }
+			    ]
+			};
+	    	var options = {
+	    		responsive: false,
+	    		scales: {
+	                xAxes: [{
+	                    type: 'time',
+	                    time: {
+	                    	unit: 'second',
+	                    	unitStepSize: 10,
+	                    	displayFormats: {
+	                    		second: 'HH:mm:ss'
+	                    	}
+	                    }
+	                }],	    			
+	    	    	yAxes: [{
+	    	        	ticks: {
+	    	            	max: 50,
+	    	                min: 0,
+	    	                stepSize: 5
+	    	            }
+	    	       }]
+	    	    },
+	    		scaleShowGridLines : true,
+	   		    scaleGridLineColor : "rgba(0,0,0,.05)",
+	   		    scaleGridLineWidth : 1,
+	   		    scaleShowHorizontalLines: true,
+	   		    scaleShowVerticalLines: true,
+	   		    bezierCurve : true,
+	   		    bezierCurveTension : 0.4,
+	   		    pointDot : true,
+	   		    pointDotRadius : 4,
+	   		    pointDotStrokeWidth : 1,
+	   		    pointHitDetectionRadius : 20,
+	   		    datasetStroke : true,
+	   		    datasetStrokeWidth : 1,
+	   		    datasetFill : true,
+	   		    legendTemplate : "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li><span style=\"background-color:<%=datasets[i].strokeColor%>\"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>"
+	    	};
+	    	
+    	 	// Get context with jQuery.
+    	    var ctx = $("#tempLogger");
     	    // This will get the first returned node in the jQuery collection.
-    	    var tempLogger = new Chart(ctx).Line(data, options);
-    	    // var date = new Date();
-    	    // tempLogger.addData([40, 60], date.toLocaleDateString()+ " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
-            var socket = new SockJS('/temperatures');
-            var stompClient = Stomp.over(socket);
-            stompClient.connect({}, function(frame) {
-                stompClient.subscribe('/data/temperatures', function(data){
-                    var sensorData = JSON.parse(data.body);
-                    var graphContent = [];
-                    var dataCaptureDate = undefined;
-                    $.each(sensorData, function(index, value){
-                    	if(dataCaptureDate === undefined){
-                    		dataCaptureDate = new Date(value.dataTimestamp);
-                    	}
-                    	graphContent.push(value.temperature);
-                    });
-                    //console.log(graphContent);
-                    //console.log(dataCaptureDate);
-                    tempLogger.addData([graphContent[0], graphContent[1]], dataCaptureDate.getHours() + ":" + dataCaptureDate.getMinutes() + ":" + dataCaptureDate.getSeconds());
-                });
-            });
-    	});
-    </script>
-    -->
+    	    var tempLogger = new Chart(ctx, {
+    	    	type: 'line',
+    	    	options: options,
+    	    	data: data
+    	    });
+	    	
+    	    function removeFirst () {
+    	    	if (tempLogger.data.datasets[0].data.length === 20) {
+    	    		var cleanedData = [];
+    	    		var cleanedLabels = [];
+    	    		for(i = 1; i < tempLogger.data.datasets[0].data.length; i++) {
+    	    			cleanedData.push(tempLogger.data.datasets[0].data[i]);
+    	    			cleanedLabels.push(tempLogger.data.labels[i]);
+    	    		}
+            		tempLogger.data.datasets[0].data = cleanedData;
+            		tempLogger.data.labels = cleanedLabels;
+    	    	}
+    	    }
+    	   	
+    	    function updateScaleOptions () {
+            	var lastElement = tempLogger.data.datasets[0].data.length - 1;
+            	tempLogger.options.scales.xAxes[0].time.min = tempLogger.data.labels[0];
+            	tempLogger.options.scales.xAxes[0].time.max = tempLogger.data.labels[lastElement];
+            	if (tempLogger.data.datasets[0].data.length > 1) {
+            		var recalculatedStepSize = (tempLogger.data.labels[1] - tempLogger.data.labels[0]) / 1000;
+            		tempLogger.options.scales.xAxes[0].time.unitStepSize = Math.round(recalculatedStepSize, 10);
+            	}
+    	    }
+    	    
+    	    function updateLogger (sensorValue) {
+				removeFirst();
+            	tempLogger.data.datasets[0].data.push(sensorValue.value);
+            	tempLogger.data.labels.push(sensorValue.timestamp);
+				updateScaleOptions();
+            	tempLogger.update();
+    	    }
+    	    
+    	    
+	    	function dataReceived (data) {
+            	console.log('Received: ' + data);
+            	var sensorValue = JSON.parse(data.body);
+            	// dataCaptureDate = new Date(sensorValue.timestamp);
+            	updateLogger(sensorValue)
+	    	}
+	    		    	
+	    	$(document).ready(function(){
+	    	    // sensor to subscribe to
+	    	    var sensor = "testSensor01";
+	    	    // open websocket and subscribe
+	            var socket = new SockJS('/temperatures');
+	            stompClient = Stomp.over(socket);
+	            stompClient.connect({}, (frame) => {
+	                console.log('Connected: ' + frame);
+	                stompClient.subscribe('/ktha/temperatures/' + sensor, dataReceived);
+	            });
+	    	});
+	    </script>
+    </div>
   </body>
 </html>

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -16,6 +17,9 @@ public class SensorService
 	
 	@Autowired
 	private SensorRepository sensorRepository;
+	
+	@Autowired
+	private SimpMessagingTemplate websocket;
 	
 	public Sensor createAndSaveSensor(final String sensorName, final String sensorDescriptor)
 	{
@@ -35,6 +39,7 @@ public class SensorService
 			this.setEditedFields(savedSensor, sensorToSave);
 			sensorToSave = savedSensor;
 		}
+		this.pushUpdate(sensorToSave);
 		return this.sensorRepository.save(sensorToSave);
 	}
 	
@@ -88,5 +93,10 @@ public class SensorService
 	public void deleteSensor(String id)
 	{
 		this.sensorRepository.delete(id);
+	}
+	
+	private void pushUpdate(Sensor sensor)
+	{
+		this.websocket.convertAndSend("/ktha/temperatures/" + sensor.getSensorName(), sensor.getSensorValue());
 	}
 }
