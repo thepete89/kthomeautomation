@@ -1,5 +1,7 @@
 package de.kawumtech.app.controlgroups.controller.helper.views;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ActionView
@@ -15,6 +17,8 @@ public class ActionView
 	private Boolean linked = Boolean.FALSE;
 	
 	private String evaluationScript;
+	
+	private List<String> availableActionExecutors = new ArrayList<String>();
 
 	public String getActionId()
 	{
@@ -74,5 +78,15 @@ public class ActionView
 	public void setEvaluationScript(String evaluationScript)
 	{
 		this.evaluationScript = evaluationScript;
+	}
+
+	public List<String> getAvailableActionExecutors()
+	{
+		return availableActionExecutors;
+	}
+
+	public void setAvailableActionExecutors(List<String> availableActionExecutors)
+	{
+		this.availableActionExecutors = availableActionExecutors;
 	}
 }

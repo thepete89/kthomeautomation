@@ -3,7 +3,6 @@ package de.kawumtech.app.controlgroups.controller.helper.views;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.kawumtech.app.controlgroups.model.action.ActionEvaluation;
 import de.kawumtech.app.controlgroups.model.sensor.Sensor;
 
 public class ControlGroupView
@@ -18,8 +17,12 @@ public class ControlGroupView
 	
 	private List<Sensor> addedSensors = new ArrayList<Sensor>();
 	
-	private List<ActionEvaluation> addedActionEvaluations = new ArrayList<ActionEvaluation>();
-
+	private List<Sensor> availableSensors = new ArrayList<Sensor>();
+	
+	private List<ActionView> addedActionEvaluations = new ArrayList<ActionView>();
+	
+	private List<ActionView> availableActionEvaluations = new ArrayList<ActionView>();
+	
 	public String getControlGroupName()
 	{
 		return controlGroupName;
@@ -60,12 +63,12 @@ public class ControlGroupView
 		this.addedSensors = addedSensors;
 	}
 
-	public List<ActionEvaluation> getAddedActionEvaluations()
+	public List<ActionView> getAddedActionEvaluations()
 	{
 		return addedActionEvaluations;
 	}
 
-	public void setAddedActionEvaluations(List<ActionEvaluation> addedActionEvaluations)
+	public void setAddedActionEvaluations(List<ActionView> addedActionEvaluations)
 	{
 		this.addedActionEvaluations = addedActionEvaluations;
 	}
@@ -78,5 +81,25 @@ public class ControlGroupView
 	public void setControlGroupId(String controlGroupId)
 	{
 		this.controlGroupId = controlGroupId;
+	}
+
+	public List<Sensor> getAvailableSensors()
+	{
+		return availableSensors;
+	}
+
+	public void setAvailableSensors(List<Sensor> availableSensors)
+	{
+		this.availableSensors = availableSensors;
+	}
+
+	public List<ActionView> getAvailableActionEvaluations()
+	{
+		return availableActionEvaluations;
+	}
+
+	public void setAvailableActionEvaluations(List<ActionView> availableActionEvaluations)
+	{
+		this.availableActionEvaluations = availableActionEvaluations;
 	}
 }
