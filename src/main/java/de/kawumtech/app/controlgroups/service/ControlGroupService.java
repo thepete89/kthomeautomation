@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import de.kawumtech.app.controlgroups.model.ControlGroup;
-import de.kawumtech.app.controlgroups.model.action.ActionEvaluation;
+import de.kawumtech.app.controlgroups.model.actuator.Actuator;
 import de.kawumtech.app.controlgroups.model.sensor.Sensor;
 import de.kawumtech.app.controlgroups.repository.ControlGroupRepository;
 
@@ -18,8 +18,11 @@ public class ControlGroupService
 	private SensorService sensorService;
 	
 	@Autowired
-	private ActionEvaluationService actionEvaluationService;
+	private ActuatorService actuatorService;
 	
+	@Autowired
+	private ScriptService scriptService;
+		
 	@Autowired
 	private ControlGroupRepository controlGroupRepository;
 	
@@ -37,55 +40,47 @@ public class ControlGroupService
 	
 	private void setEditedFields(final ControlGroup savedControlGroup, final ControlGroup controlGroup)
 	{
-		savedControlGroup.setActionEvaluationIds(controlGroup.getActionEvaluationIds());
 		savedControlGroup.setControlGroupName(controlGroup.getControlGroupName());
-		savedControlGroup.setSensorIds(controlGroup.getSensorIds());
+		savedControlGroup.setControlGroupScript(controlGroup.getControlGroupScript());
 	}
-
-	public void triggerControlGroup(final String sensorName)
+	
+	public void triggerControlGroups(final List<ControlGroup> controlGroupsToTrigger)
 	{
-		Sensor sensor = this.sensorService.findSensorBySensorName(sensorName);
-		ControlGroup controlGroup = this.controlGroupRepository.findBySensorIdsContains(sensor.getId());
-		if(controlGroup != null)
+		for (ControlGroup controlGroup : controlGroupsToTrigger)
 		{
-			List<Sensor> controlGroupSensors = this.sensorService.findSensorsByIds(controlGroup.getSensorIds());
-			List<ActionEvaluation> controlGroupActionEvaluations = this.actionEvaluationService.findActionEvaluationsByIds(controlGroup.getActionEvaluationIds());
-			for (ActionEvaluation actionEvaluation : controlGroupActionEvaluations)
-			{
-				actionEvaluation.evaluate(controlGroupSensors);
-			}
+			List<Sensor> sensors = this.sensorService.findSensorsByControlGroupIdsContaining(controlGroup.getId());
+			List<Actuator> actuators = this.actuatorService.findByControlGroupIdsContains(controlGroup.getId());
+			this.scriptService.runScript(controlGroup.getControlGroupScript(), actuators, sensors);
 		}
 	}
 	
 	public void deleteControlGroup(String controlGroupId)
 	{
-		ControlGroup controlGroup = this.controlGroupRepository.findOne(controlGroupId);
-		this.unlinkSensors(controlGroup.getSensorIds());
-		this.unlinkActionEvaluations(controlGroup.getActionEvaluationIds());
+		this.unlinkSensors(controlGroupId);
+		this.unlinkActuators(controlGroupId);
 		this.controlGroupRepository.delete(controlGroupId);
 	}
 	
-	private void unlinkSensors(List<String> sensorIds)
+	private void unlinkSensors(String controlGroupId)
 	{
-		List<Sensor> linkedSensors = this.sensorService.findSensorsByIds(sensorIds);
+		List<Sensor> linkedSensors = this.sensorService.findSensorsByControlGroupIdsContaining(controlGroupId);
 		for (Sensor sensor : linkedSensors)
 		{
-			sensor.setLinked(Boolean.FALSE);
+			sensor.getControlGroupIds().remove(controlGroupId);
 			this.sensorService.saveSensor(sensor);
 		}
 	}
 	
-	private void unlinkActionEvaluations(List<String> actionEvaluationIds)
+	private void unlinkActuators(String controlGroupId)
 	{
-		List<ActionEvaluation> linkedActionEvaluations = this.actionEvaluationService.findActionEvaluationsByIds(actionEvaluationIds);
-		for (ActionEvaluation actionEvaluation : linkedActionEvaluations)
+		List<Actuator> linkedActuators = this.actuatorService.findByControlGroupIdsContains(controlGroupId);
+		for (Actuator actuator : linkedActuators)
 		{
-			actionEvaluation.setLinked(Boolean.FALSE);
-			this.actionEvaluationService.saveActionEvaluation(actionEvaluation);
+			actuator.getControlGroupIds().remove(controlGroupId);
+			this.actuatorService.saveActuator(actuator);
 		}
 	}
-
-
+	
 	public ControlGroup getControlGroupByControlGroupName(final String controlGroupName)
 	{
 		return this.controlGroupRepository.findByControlGroupName(controlGroupName);

@@ -9,5 +9,5 @@ import de.kawumtech.app.controlgroups.model.sensor.Sensor;
 public interface SensorRepository extends MongoRepository<Sensor, String>
 {
 	Sensor findBySensorName(String sensorName);
-	List<Sensor> findByLinked(Boolean linked);
+	List<Sensor> findByControlGroupIdsContains(String controlGroupId);
 }
