@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,16 +16,13 @@ public class SensorService
 	
 	@Autowired
 	private SensorRepository sensorRepository;
-	
-	@Autowired
-	private SimpMessagingTemplate websocket;
-	
+		
 	public Sensor createAndSaveSensor(final String sensorName, final String sensorDescriptor)
 	{
 		Sensor sensor = new Sensor();
 		sensor.setSensorName(sensorName);
 		sensor.setSensorDescriptor(sensorDescriptor);
-		sensor.setLinked(Boolean.FALSE);
+		sensor.setControlGroupIds(new ArrayList<>());
 		return this.sensorRepository.save(sensor);
 	}
 	
@@ -39,7 +35,6 @@ public class SensorService
 			this.setEditedFields(savedSensor, sensorToSave);
 			sensorToSave = savedSensor;
 		}
-		this.pushUpdate(sensorToSave);
 		return this.sensorRepository.save(sensorToSave);
 	}
 	
@@ -67,9 +62,9 @@ public class SensorService
 		return this.sensorRepository.findOne(sensorId);
 	}
 	
-	public List<Sensor> findSensorsByLinked(final Boolean linked)
+	public List<Sensor> findSensorsByControlGroupIdsContaining(final String controlGroupId)
 	{
-		return this.sensorRepository.findByLinked(linked);
+		return this.sensorRepository.findByControlGroupIdsContains(controlGroupId);
 	}
 	
 	public List<Sensor> loadAllSensors()
@@ -87,16 +82,11 @@ public class SensorService
 		savedSensor.setSensorDescriptor(sensorToSave.getSensorDescriptor());
 		savedSensor.setSensorName(sensorToSave.getSensorName());
 		savedSensor.setSensorValue(sensorToSave.getSensorValue());
-		savedSensor.setLinked(sensorToSave.isLinked());
+		savedSensor.setControlGroupIds(sensorToSave.getControlGroupIds());
 	}
 
 	public void deleteSensor(String id)
 	{
 		this.sensorRepository.delete(id);
-	}
-	
-	private void pushUpdate(Sensor sensor)
-	{
-		this.websocket.convertAndSend("/ktha/temperatures/" + sensor.getSensorName(), sensor.getSensorValue());
 	}
 }

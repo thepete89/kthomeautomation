@@ -1,61 +1,46 @@
 package de.kawumtech.app.controlgroups.controller.helper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.kawumtech.app.controlgroups.controller.helper.views.ActionView;
 import de.kawumtech.app.controlgroups.controller.helper.views.ControlGroupView;
 import de.kawumtech.app.controlgroups.model.ControlGroup;
-import de.kawumtech.app.controlgroups.model.action.ActionEvaluation;
-import de.kawumtech.app.controlgroups.model.action.executor.IActionExecutor;
+import de.kawumtech.app.controlgroups.model.actuator.Actuator;
 import de.kawumtech.app.controlgroups.model.sensor.Sensor;
-import de.kawumtech.app.controlgroups.service.ActionEvaluationService;
+import de.kawumtech.app.controlgroups.service.ActuatorService;
 import de.kawumtech.app.controlgroups.service.SensorService;
 
 @Component
 public class ControlGroupsControllerHelper
 {
 	@Autowired
-	private ActionEvaluationService actionEvaluationService;
-	
-	@Autowired
 	private SensorService sensorService;
+
+	@Autowired
+	private ActuatorService actuatorService;
 	
-	public List<ActionView> filterSelectableActionEvaluations(List<ActionView> selectedActionEvaluations)
+	public List<ControlGroupView> createControlGroupViews(final List<ControlGroup> controlGroups)
 	{
-		List<ActionView> availableActionEvaluations = this.loadAvailableActionEvaluations();
-		Iterator<ActionView> actionIterator = availableActionEvaluations.iterator();
-		while(actionIterator.hasNext())
-		{
-			ActionView currentActionEvaluation = actionIterator.next();
-			for (ActionView selectedActionEvaluation : selectedActionEvaluations)
-			{
-				if(currentActionEvaluation.getActionId().equals(selectedActionEvaluation.getActionId()))
-				{
-					actionIterator.remove();
-					break;
-				}
-			}
-		}
-		return availableActionEvaluations;
+		List<ControlGroupView> controlGroupViews = controlGroups.stream().map(cg -> {
+			return this.convertControlGroupToControlGroupView(cg);
+		}).collect(Collectors.toList());
+		return controlGroupViews;
 	}
 	
-	public List<Sensor> filterSelectableSensors(List<Sensor> selectedSensors)
+	public List<Sensor> filterSelectableSensors(final List<Sensor> selectedSensors)
 	{
-		List<Sensor> availableSensors = this.sensorService.findSensorsByLinked(Boolean.FALSE);
+		List<Sensor> availableSensors = this.sensorService.loadAllSensors();
 		Iterator<Sensor> sensorIterator = availableSensors.iterator();
-		while(sensorIterator.hasNext())
+		while (sensorIterator.hasNext())
 		{
 			Sensor currentSensor = sensorIterator.next();
 			for (Sensor selectedSensor : selectedSensors)
 			{
-				if(currentSensor.getId().equals(selectedSensor.getId()))
+				if (currentSensor.getId().equals(selectedSensor.getId()))
 				{
 					sensorIterator.remove();
 					break;
@@ -70,84 +55,16 @@ public class ControlGroupsControllerHelper
 		ControlGroup controlGroup = new ControlGroup();
 		controlGroup.setId(controlGroupView.getControlGroupId());
 		controlGroup.setControlGroupName(controlGroupView.getControlGroupName());
-		this.assignSensors(controlGroup, controlGroupView.getAddedSensors());
-		this.assignActions(controlGroup, controlGroupView.getAddedActionEvaluations());
+		controlGroup.setControlGroupScript(controlGroupView.getControlGroupScript());
 		return controlGroup;
 	}
-	
-	public ActionView convertActionEvaluationToActionView(ActionEvaluation actionEvaluation)
-	{
-		ActionView actionView = new ActionView();
-		if(actionEvaluation != null)
-		{
-			actionView.setActionId(actionEvaluation.getId());
-			actionView.setLinked(actionEvaluation.isLinked());
-			actionView.setEvaluationScript(actionEvaluation.getEvaluationScript());
-			actionView.setActionDataMap(actionEvaluation.getActionExecutor().getExecutorDataMap());
-			actionView.setActionEvaluationName(actionEvaluation.getActionEvaluationName());
-			actionView.setActionExecutor(actionEvaluation.getActionExecutor().getClass().getSimpleName());
-			actionView.setAvailableActionExecutors(this.actionEvaluationService.getAvailableActionExecutors());
-		}
-		return actionView;
-	}
-	
-	public void updateActionExecutorDataMap(ActionView actionView)
-	{
-		Map<String, Object> actionDataMap = new HashMap<String, Object>();
-		IActionExecutor actionExecutor = this.actionEvaluationService.getActionExecutorByRegistrationName(actionView.getActionExecutor());
-		if(actionView.getActionId() != null)
-		{
-			actionDataMap = this.checkForExistingExecutorData(actionView, actionExecutor);
-		}
-		else
-		{
-			this.fillActionDataMap(actionDataMap, actionExecutor);
-		}
-		actionView.setActionDataMap(actionDataMap);
-	}
 
-	private void fillActionDataMap(Map<String, Object> actionDataMap, IActionExecutor actionExecutor)
-	{
-		for (String key : actionExecutor.getValidExecutorDataMapKeys())
-		{
-			actionDataMap.put(key, "");
-		}
-	}
-	
-	private Map<String, Object> checkForExistingExecutorData(ActionView actionView, IActionExecutor actionExecutor)
-	{
-		Map<String, Object> actionDataMap = new HashMap<String, Object>();
-		ActionEvaluation savedActionEvaluation = this.actionEvaluationService.findActionEvaluationById(actionView.getActionId());
-		if(savedActionEvaluation.getActionExecutor().getClass().equals(actionExecutor.getClass()))
-		{
-			actionDataMap = savedActionEvaluation.getActionExecutor().getExecutorDataMap();
-		}
-		else
-		{
-			this.fillActionDataMap(actionDataMap, actionExecutor);
-		}
-		return actionDataMap;
-	}
-	
-	private void assignActions(ControlGroup controlGroup, List<ActionView> addedActionEvaluations)
-	{
-		for (ActionView actionEvaluation : addedActionEvaluations)
-		{
-			controlGroup.getActionEvaluationIds().add(actionEvaluation.getActionId());
-			ActionEvaluation savedActionEvaluation = this.actionEvaluationService.findActionEvaluationById(actionEvaluation.getActionId());
-			savedActionEvaluation.setEvaluationScript(actionEvaluation.getEvaluationScript());
-			savedActionEvaluation.setLinked(Boolean.TRUE);
-			this.actionEvaluationService.saveActionEvaluation(savedActionEvaluation);
-		}
-	}
-
-	private void assignSensors(ControlGroup controlGroup, List<Sensor> addedSensors)
+	public void assignSensors(ControlGroup controlGroup, List<Sensor> addedSensors)
 	{
 		for (Sensor sensor : addedSensors)
 		{
-			controlGroup.getSensorIds().add(sensor.getId());
 			Sensor savedSensor = this.sensorService.findSensorById(sensor.getId());
-			savedSensor.setLinked(Boolean.TRUE);
+			savedSensor.getControlGroupIds().add(controlGroup.getId());
 			this.sensorService.saveSensor(savedSensor);
 		}
 	}
@@ -155,99 +72,80 @@ public class ControlGroupsControllerHelper
 	public ControlGroupView convertControlGroupToControlGroupView(ControlGroup controlGroup)
 	{
 		ControlGroupView controlGroupView = new ControlGroupView();
-		if(controlGroup != null)
+		if (controlGroup != null)
 		{
 			controlGroupView.setControlGroupId(controlGroup.getId());
 			controlGroupView.setControlGroupName(controlGroup.getControlGroupName());
-			this.loadSensors(controlGroupView, controlGroup.getSensorIds());
-			this.loadActions(controlGroupView, controlGroup.getActionEvaluationIds());
+			controlGroupView.setControlGroupScript(controlGroup.getControlGroupScript());
+			controlGroupView.setAddedSensors(this.sensorService
+					.findSensorsByControlGroupIdsContaining(controlGroup.getId()));
+			controlGroupView.setAddedActuators(this.actuatorService.findByControlGroupIdsContains(controlGroup.getId()));
+			controlGroupView.setAvailableSensors(this.filterSelectableSensors(controlGroupView.getAddedSensors()));
+			controlGroupView.setAvailableActuators(this.filterSelectableActuators(controlGroupView.getAddedActuators()));
 		}
 		return controlGroupView;
-	}
-
-	private void loadActions(ControlGroupView controlGroupView, List<String> actionEvaluationIds)
-	{
-		List<ActionView> selectedActionEvaluations = new ArrayList<ActionView>();
-		for (ActionEvaluation actionEvaluation : this.actionEvaluationService.findActionEvaluationsByIds(actionEvaluationIds))
-		{
-			selectedActionEvaluations.add(this.convertActionEvaluationToActionView(actionEvaluation));
-		}
-		controlGroupView.setAddedActionEvaluations(selectedActionEvaluations);
-	}
-
-	private void loadSensors(ControlGroupView controlGroupView, List<String> sensorIds)
-	{
-		List<Sensor> selectedSensors = this.sensorService.findSensorsByIds(sensorIds);
-		controlGroupView.setAddedSensors(selectedSensors);
 	}
 
 	public void removeSensor(ControlGroupView controlGroupView, String sensorId)
 	{
 		Iterator<Sensor> sensorIterator = controlGroupView.getAddedSensors().iterator();
-		while(sensorIterator.hasNext())
+		while (sensorIterator.hasNext())
 		{
 			Sensor sensor = sensorIterator.next();
-			if(sensor.getId().equals(sensorId))
+			if (sensor.getId().equals(sensorId))
 			{
 				sensorIterator.remove();
 				Sensor savedSensor = this.sensorService.findSensorById(sensorId);
-				savedSensor.setLinked(Boolean.FALSE);
+				savedSensor.getControlGroupIds().remove(controlGroupView.getControlGroupId());
 				this.sensorService.saveSensor(savedSensor);
 				break;
 			}
 		}
 	}
 
-	public void removeAction(ControlGroupView controlGroupView, String actionId)
+	public void assignActuators(ControlGroup controlGroup, List<Actuator> addedActuators)
 	{
-		Iterator<ActionView> actionIterator = controlGroupView.getAddedActionEvaluations().iterator();
-		while(actionIterator.hasNext())
+		for (Actuator actuator : addedActuators)
 		{
-			ActionView actionEvaluation = actionIterator.next();
-			if(actionEvaluation.getActionId().equals(actionId))
+			Actuator savedActuator = this.actuatorService.findById(actuator.getId());
+			savedActuator.getControlGroupIds().add(controlGroup.getId());
+			this.actuatorService.saveActuator(savedActuator);
+		}
+	}
+
+	public List<Actuator> filterSelectableActuators(List<Actuator> addedActuators)
+	{
+		List<Actuator> availableActuators = this.actuatorService.loadAllActuators();
+		Iterator<Actuator> actuatorIterator = availableActuators.iterator();
+		while (actuatorIterator.hasNext())
+		{
+			Actuator currentActuator = actuatorIterator.next();
+			for (Actuator actuator : addedActuators)
 			{
-				actionIterator.remove();
-				ActionEvaluation savedActionEvaluation = this.actionEvaluationService.findActionEvaluationById(actionId);
-				savedActionEvaluation.setLinked(Boolean.FALSE);
-				this.actionEvaluationService.saveActionEvaluation(savedActionEvaluation);
+				if (currentActuator.getId().equals(actuator.getId()))
+				{
+					actuatorIterator.remove();
+					break;
+				}
+			}
+		}
+		return availableActuators;
+	}
+
+	public void removeActuator(ControlGroupView controlGroupView, String actuatorId)
+	{
+		Iterator<Actuator> actuatorIterator = controlGroupView.getAddedActuators().iterator();
+		while (actuatorIterator.hasNext())
+		{
+			Actuator actuator = actuatorIterator.next();
+			if (actuator.getId().equals(actuatorId))
+			{
+				actuatorIterator.remove();
+				Actuator savedActuator = this.actuatorService.findById(actuatorId);
+				savedActuator.getControlGroupIds().remove(controlGroupView.getControlGroupId());
+				this.actuatorService.saveActuator(savedActuator);
 				break;
 			}
 		}
-	}
-
-	public ActionEvaluation convertActionViewToActionEvaluation(ActionView actionView)
-	{
-		ActionEvaluation actionEvaluation = new ActionEvaluation();
-		actionEvaluation.setId(actionView.getActionId());
-		actionEvaluation.setActionEvaluationName(actionView.getActionEvaluationName());
-		actionEvaluation.setLinked(actionView.getLinked());
-		actionEvaluation.setEvaluationScript(actionView.getEvaluationScript());
-		IActionExecutor actionExecutor = this.actionEvaluationService.getActionExecutorByRegistrationName(actionView.getActionExecutor());
-		if(actionExecutor != null)
-		{
-			actionExecutor.setExecutorDataMap(actionView.getActionDataMap());
-		}
-		actionEvaluation.setActionExecutor(actionExecutor);
-		return actionEvaluation;
-	}
-
-	public List<ActionView> loadAvailableActionEvaluations()
-	{
-		List<ActionView> availableActions = new ArrayList<ActionView>();
-		for (ActionEvaluation actionEvaluation : this.actionEvaluationService.findActionEvaluationsByLinked(Boolean.FALSE))
-		{
-			availableActions.add(this.convertActionEvaluationToActionView(actionEvaluation));
-		}
-		return availableActions;
-	}
-	
-	public List<ActionView> loadAllActionEvaluations()
-	{
-		List<ActionView> actionViews = new ArrayList<ActionView>();
-		for (ActionEvaluation actionEvaluation : this.actionEvaluationService.findAllActionEvaluations())
-		{
-			actionViews.add(this.convertActionEvaluationToActionView(actionEvaluation));
-		}
-		return actionViews;
 	}
 }

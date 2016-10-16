@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.kawumtech.app.controlgroups.controller.helper.ControlGroupsControllerHelper;
 import de.kawumtech.app.controlgroups.controller.helper.views.ControlGroupView;
 import de.kawumtech.app.controlgroups.model.ControlGroup;
-import de.kawumtech.app.controlgroups.model.action.ActionEvaluation;
-import de.kawumtech.app.controlgroups.service.ActionEvaluationService;
+import de.kawumtech.app.controlgroups.service.ActuatorService;
 import de.kawumtech.app.controlgroups.service.ControlGroupService;
 import de.kawumtech.app.controlgroups.service.SensorService;
 
@@ -24,36 +23,34 @@ public class ControlGroupsManageController
 {	
 	@Autowired
 	private ControlGroupService controlGroupService;
-	
-	@Autowired
-	private ActionEvaluationService actionEvaluationService;
-	
+		
 	@Autowired
 	private SensorService sensorService;
+	
+	@Autowired
+	private ActuatorService actuatorService;
 	
 	@Autowired
 	private ControlGroupsControllerHelper controlGroupsControllerHelper;
 	
 	
 	@RequestMapping(value="/controlgroups/manage")
-	public List<ControlGroup> getView()
+	public List<ControlGroupView> getView()
 	{
-		return this.controlGroupService.loadControlGroups();
+		return this.controlGroupsControllerHelper.createControlGroupViews(this.controlGroupService.loadControlGroups());
 	}
 	
 	@RequestMapping(value="/controlgroups/manage/delete", params = {"id"})
-	public List<ControlGroup> deleteControlGroup(@RequestParam final String id)
+	public List<ControlGroupView> deleteControlGroup(@RequestParam final String id)
 	{
 		this.controlGroupService.deleteControlGroup(id);
-		return this.controlGroupService.loadControlGroups();
+		return this.controlGroupsControllerHelper.createControlGroupViews(this.controlGroupService.loadControlGroups());
 	}
 
 	@RequestMapping(value="/controlgroups/manage/edit", params = {"id"})
 	public ControlGroupView editControlGroup(@RequestParam final String id)
 	{
 		ControlGroupView view = this.controlGroupsControllerHelper.convertControlGroupToControlGroupView(this.controlGroupService.findControlGroupById(id));
-		view.setAvailableActionEvaluations(this.controlGroupsControllerHelper.loadAvailableActionEvaluations());
-		view.setAvailableSensors(this.sensorService.findSensorsByLinked(Boolean.FALSE));
 		return view;
 	}
 	
@@ -61,8 +58,8 @@ public class ControlGroupsManageController
 	public ControlGroupView addControlGroup()
 	{
 		ControlGroupView view = new ControlGroupView();
-		view.setAvailableActionEvaluations(this.controlGroupsControllerHelper.loadAvailableActionEvaluations());
-		view.setAvailableSensors(this.sensorService.findSensorsByLinked(Boolean.FALSE));
+		view.setAvailableSensors(this.sensorService.loadAllSensors());
+		view.setAvailableActuators(this.actuatorService.loadAllActuators());
 		return view;
 	}
 	
@@ -70,7 +67,6 @@ public class ControlGroupsManageController
 	public ControlGroupView addSensor(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult)
 	{
 		controlGroupView.getAddedSensors().add(this.sensorService.findSensorById(controlGroupView.getSelectedSensor()));
-		controlGroupView.setAvailableActionEvaluations(this.controlGroupsControllerHelper.filterSelectableActionEvaluations(controlGroupView.getAddedActionEvaluations()));
 		controlGroupView.setAvailableSensors(this.controlGroupsControllerHelper.filterSelectableSensors(controlGroupView.getAddedSensors()));
 		return controlGroupView;
 	}
@@ -80,28 +76,24 @@ public class ControlGroupsManageController
 	{
 		String sensorId = String.valueOf(httpServletRequest.getParameter("removeSensor"));
 		this.controlGroupsControllerHelper.removeSensor(controlGroupView, sensorId);
-		controlGroupView.setAvailableActionEvaluations(this.controlGroupsControllerHelper.filterSelectableActionEvaluations(controlGroupView.getAddedActionEvaluations()));
 		controlGroupView.setAvailableSensors(this.controlGroupsControllerHelper.filterSelectableSensors(controlGroupView.getAddedSensors()));
 		return controlGroupView;
 	}
 	
-	@RequestMapping(value="/controlgroups/manage/modify", params = {"addAction"})
-	public ControlGroupView addAction(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult)
+	@RequestMapping(value="/controlgroups/manage/modify", params = {"addActuator"})
+	public ControlGroupView addActuator(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult)
 	{
-		ActionEvaluation selectedAction = this.actionEvaluationService.findActionEvaluationById(controlGroupView.getSelectedActionEvaluation());
-		controlGroupView.getAddedActionEvaluations().add(this.controlGroupsControllerHelper.convertActionEvaluationToActionView(selectedAction));
-		controlGroupView.setAvailableActionEvaluations(this.controlGroupsControllerHelper.filterSelectableActionEvaluations(controlGroupView.getAddedActionEvaluations()));
-		controlGroupView.setAvailableSensors(this.controlGroupsControllerHelper.filterSelectableSensors(controlGroupView.getAddedSensors()));
+		controlGroupView.getAddedActuators().add(this.actuatorService.findById(controlGroupView.getSelectedActuator()));
+		controlGroupView.setAvailableActuators(this.controlGroupsControllerHelper.filterSelectableActuators(controlGroupView.getAddedActuators()));
 		return controlGroupView;
 	}
-
-	@RequestMapping(value="/controlgroups/manage/modify", params = {"removeAction"})
-	public ControlGroupView removeAction(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult, final HttpServletRequest httpServletRequest)
+	
+	@RequestMapping(value="/controlgroups/manage/modify", params = {"removeActuator"})
+	public ControlGroupView removeActuator(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult, final HttpServletRequest httpServletRequest)
 	{
-		String actionId = String.valueOf(httpServletRequest.getParameter("removeAction"));
-		this.controlGroupsControllerHelper.removeAction(controlGroupView, actionId);
-		controlGroupView.setAvailableActionEvaluations(this.controlGroupsControllerHelper.filterSelectableActionEvaluations(controlGroupView.getAddedActionEvaluations()));
-		controlGroupView.setAvailableSensors(this.controlGroupsControllerHelper.filterSelectableSensors(controlGroupView.getAddedSensors()));
+		String actuatorId = String.valueOf(httpServletRequest.getParameter("removeActuator"));
+		this.controlGroupsControllerHelper.removeActuator(controlGroupView, actuatorId);
+		controlGroupView.setAvailableActuators(this.controlGroupsControllerHelper.filterSelectableActuators(controlGroupView.getAddedActuators()));
 		return controlGroupView;
 	}
 	
@@ -109,7 +101,9 @@ public class ControlGroupsManageController
 	public ControlGroupView saveControlGroup(@RequestBody final ControlGroupView controlGroupView, final BindingResult bindingResult)
 	{
 		ControlGroup controlGroup = this.controlGroupsControllerHelper.convertControlGroupViewToControlGroup(controlGroupView);
-		this.controlGroupService.saveControlGroup(controlGroup);
+		controlGroup = this.controlGroupService.saveControlGroup(controlGroup);
+		this.controlGroupsControllerHelper.assignSensors(controlGroup, controlGroupView.getAddedSensors());
+		this.controlGroupsControllerHelper.assignActuators(controlGroup, controlGroupView.getAddedActuators());
 		return controlGroupView;
 	}
 }
